@@ -90,7 +90,7 @@ void setup()
   //setup for 7 segment
   byte numDigits = 1;
   byte digitPins[] = {};
-  byte segmentPins[] = {3,3,3,3,3,3,3,3};
+  byte segmentPins[] = {7,3,3,8,3,3,3,3};
   bool resistorsOnSegments = true;
   
   byte hardwareConfig = COMMON_ANODE; 
