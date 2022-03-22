@@ -107,7 +107,7 @@ void setup()
 	//setup for 7 segment
 	byte numDigits = 1;
 	byte digitPins[] = {};
-	byte segmentPins[] = {3,3,3,3,3,3,3,3};
+  byte segmentPins[] = {6,7,8,5,4,2,3};
 	bool resistorsOnSegments = true;
 
 	byte hardwareConfig = COMMON_ANODE; 
@@ -115,10 +115,12 @@ void setup()
 	sevseg.setBrightness(90);
 
 	Serial.println("LED Initialized");
+
 }
 
 void loop()
 {
+
 	sensor1.read();
 	sensor2.read();
 	sevseg.setNumber(1);
@@ -170,7 +172,10 @@ void loop()
 		digitalWrite(YELLOW, LOW);
 		digitalWrite(GREEN, HIGH);
 	}
-	
+	sevseg.setNumber(LEDcounter);
+  sevseg.refreshDisplay();
+
 	Serial.print("Current count: ");
 	Serial.println(LEDcounter);
+
 }
