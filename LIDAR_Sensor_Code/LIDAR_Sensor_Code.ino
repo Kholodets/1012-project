@@ -33,10 +33,20 @@ bool s2s = false;
 bool s1f = false;
 bool s2f = false;
 
-const int ACTIVATION_DISTANCE = 100; //distance at which the lidars will be triggered, in mm
+const int ACTIVATION_DISTANCE = 500; //distance at which the lidars will be triggered, in mm
+
+const int MAX_OCCUPANCY = 10;
+
+const int RED = 11;
+const int YELLOW = 12;
+const int GREEN = 13;
 
 void setup()
 {
+	pinMode(RED, OUTPUT);
+	pinMode(YELLOW, OUTPUT);
+	pinMode(GREEN, OUTPUT);
+
 	pinMode(sensor1_EN_Pin,OUTPUT);
 	pinMode(sensor2_EN_Pin,OUTPUT);
 	digitalWrite(sensor1_EN_Pin,HIGH); // Enable sensor1
@@ -147,6 +157,20 @@ void loop()
 		s2s = false;
 	}
 
+	if (LEDcounter >= MAX_OCCUPANCY) {
+		digitalWrite(RED, HIGH);
+		digitalWrite(YELLOW, LOW);
+		digitalWrite(GREEN, LOW);
+	} else if (((float) LEDcounter) / MAX_OCCUPANCY >= 0.8) {
+		digitalWrite(RED, LOW);
+		digitalWrite(YELLOW, HIGH);
+		digitalWrite(GREEN, LOW);
+	} else {
+		digitalWrite(RED, LOW);
+		digitalWrite(YELLOW, LOW);
+		digitalWrite(GREEN, HIGH);
+	}
+	
 	Serial.print("Current count: ");
 	Serial.println(LEDcounter);
 }
