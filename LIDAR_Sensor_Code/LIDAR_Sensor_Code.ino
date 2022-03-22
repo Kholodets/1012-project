@@ -90,7 +90,7 @@ void setup()
   //setup for 7 segment
   byte numDigits = 1;
   byte digitPins[] = {};
-  byte segmentPins[] = {7,3,3,8,3,3,3,3};
+  byte segmentPins[] = {6,7,8,5,4,2,3};
   bool resistorsOnSegments = true;
   
   byte hardwareConfig = COMMON_ANODE; 
@@ -104,8 +104,7 @@ void loop()
 {
   sensor1.read();
   sensor2.read();
-  sevseg.setNumber(1);
-  sevseg.refreshDisplay();
+
   
   Serial.print("range1: ");
   Serial.print(sensor1.ranging_data.range_mm);
@@ -113,4 +112,7 @@ void loop()
   Serial.print(sensor2.ranging_data.range_mm);
   
   Serial.println();
+
+  sevseg.setNumber(LEDcounter);
+  sevseg.refreshDisplay();
 }
