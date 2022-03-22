@@ -33,6 +33,8 @@ bool s2s = false;
 bool s1f = false;
 bool s2f = false;
 
+const int ACTIVATION_DISTANCE = 100; //distance at which the lidars will be triggered, in mm
+
 void setup()
 {
 	pinMode(sensor1_EN_Pin,OUTPUT);
@@ -117,7 +119,7 @@ void loop()
 	Serial.print(", range2: ");
 	Serial.print(sensor2.ranging_data.range_mm);
 	
-	if (sensor1.ranging_data.range_mm < 100) {
+	if (sensor1.ranging_data.range_mm < ACTIVATION_DISTANCE) {
 		if (!s1s) {
 			s1s = true;
 			if (s2f) {
@@ -131,7 +133,7 @@ void loop()
 		s1s = false;
 	}
 
-	if (sensor2.ranging_data.range_mm < 100) {
+	if (sensor2.ranging_data.range_mm < ACTIVATION_DISTANCE) {
 		if (!s2s) {
 			s2s = true;
 			if (s1f) {
