@@ -15,6 +15,12 @@ int sensor2_EN_Pin = A3;
 int buttonRED = A1;
 int buttonGREEN = A0;
 
+int buttonREDstate;
+int buttonGREENstate;
+
+bool buttonREDopen = false;
+bool buttonGREENopen = false;
+
 #include <Wire.h>
 #include <VL53L1X.h>
 #include "SevSeg.h"
@@ -25,11 +31,8 @@ VL53L1X sensor2;
 SevSeg sevseg; 
 int LEDcounter = 0;
 
-bool s1s = false;
-bool s2s = false;
-
-bool s1f = false;
-bool s2f = false;
+bool sensor1state = false;
+bool sensor2state = false;
 
 const int ACTIVATION_DISTANCE = 500; //distance at which the lidars will be triggered, in mm
 
@@ -126,50 +129,65 @@ void setup()
 
 void loop()
 {
-  if ((buttonRED == HIGH)&&(buttonGREEN == HIGH)) {
-    //calibration code
+  buttonREDstate = digitalRead(buttonRED);
+  buttonGREENstate = digitalRead(buttonGREEN);
+
+  //red button decrements sensor
+  if ((buttonREDstate == HIGH) && (buttonGREENstate == LOW)){
+    if (!buttonREDopen){ //sees if button is still being held
+      LEDcounter--;
+      buttonREDopen = true;
+    }
     
-  } else if (buttonGREEN == HIGH){ //green button increments
-    LEDcounter++;
-    
-  } else if (buttonRED == HIGH){ //red button decrements
-    LEDcounter--;
+  } else if (buttonREDstate == LOW){
+    buttonREDopen = false;
   }
-  
+
+  //green button increments sensor
+  if ((buttonGREENstate == HIGH) && (buttonREDstate == LOW)){
+    if (!buttonGREENstate){ //sees if button is still being held
+      LEDcounter++;
+      buttonGREENopen = true;
+    }
+  } else if (buttonGREENstate == LOW){
+    buttonGREENopen = false;
+  }
+
+    
 	//read distances from both sensors
 	sensor1.read();
 	sensor2.read();
 
 	if (sensor1.ranging_data.range_mm < ACTIVATION_DISTANCE) {
 		//if the sensor is NEWLY activated, detirmine if it is the first or second sensor to be tripped
-		if (!s1s) {
-			s1s = true;
+		if (!sensor1state) {
+			sensor1state = true;
 			//if it is the second sensor to be activated, reset the system and increment the counter
-			if (s2f) {
+			if (sensor2first) {
 				LEDcounter++;
-				s2f = false;
+				sensor2first = false;
 			//if its the first, prime the second sensor to be ready
 			} else {
-				s1f = true;
+				sensor1first = true;
 			}
 		}
 	} else {
-		s1s = false;
+		sensor1state = false;
 	}
 
 	//repeat for sensor two, will decrement the countrer instead of incrementing it
 	if (sensor2.ranging_data.range_mm < ACTIVATION_DISTANCE) {
-		if (!s2s) {
-			s2s = true;
-			if (s1f) {
+		if (!sensor2state) {
+			sensor2state = true;
+			if (sensor1first) {
 				LEDcounter--;
-				s1f = false;
+				sensor1first = false;
 			} else {
-				s2f = true;
+				sensor2first = true;
 			}
 		}
 	} else {
-		s2s = false;
+		sensor2state = false;
 	}
 
 	//turn on the LED corresponding to the current occupancy
