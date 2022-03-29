@@ -9,13 +9,11 @@
    counts per second).
  */
 
+int sensor1_EN_Pin = A2;
+int sensor2_EN_Pin = A3;
 
-// You have to connect SDA and SCL as normal.
-// In addition, one "XSHUT" line must be connected to Arduino for each LIDAR
-int sensor1_EN_Pin = 10;  // Connect to XSHUT
-int sensor2_EN_Pin = 9;  
-// if you're curious, XSHUT stands for NOT_SHUTDOWN, 
-//   which is synonomous with ENABLE, shortend to EN.
+int buttonRED = A1;
+int buttonGREEN = A0;
 
 #include <Wire.h>
 #include <VL53L1X.h>
@@ -40,12 +38,20 @@ const int MAX_OCCUPANCY = 5;
 const int RED = 11;
 const int YELLOW = 12;
 const int GREEN = 13;
+int LED10 = 10;
+int LED20 = 9;
 
 void setup()
 {
 	pinMode(RED, OUTPUT);
 	pinMode(YELLOW, OUTPUT);
 	pinMode(GREEN, OUTPUT);
+
+  pinMode(LED10, OUTPUT);
+  pinMode(LED20, OUTPUT);
+
+  pinMode(buttonRED, INPUT);
+  pinMode(buttonGREEN, INPUT);
 
 	pinMode(sensor1_EN_Pin,OUTPUT);
 	pinMode(sensor2_EN_Pin,OUTPUT);
@@ -120,6 +126,16 @@ void setup()
 
 void loop()
 {
+  if ((buttonRED == HIGH)&&(buttonGREEN == HIGH)) {
+    //calibration code
+    
+  } else if (buttonGREEN == HIGH){ //green button increments
+    LEDcounter++;
+    
+  } else if (buttonRED == HIGH){ //red button decrements
+    LEDcounter--;
+  }
+  
 	//read distances from both sensors
 	sensor1.read();
 	sensor2.read();
