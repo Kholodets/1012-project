@@ -35,7 +35,7 @@ bool s2f = false;
 
 const int ACTIVATION_DISTANCE = 500; //distance at which the lidars will be triggered, in mm
 
-const int MAX_OCCUPANCY = 10;
+const int MAX_OCCUPANCY = 5;
 
 const int RED = 11;
 const int YELLOW = 12;
@@ -59,7 +59,7 @@ void setup()
 
 	// First we setup sensor1 as normal
 	sensor1.setTimeout(500);
-	
+
 	if (!sensor1.init()) {
 		Serial.println("Failed to detect and initialize sensor1!");
 		while (1);
@@ -94,12 +94,12 @@ void setup()
 	// Sensor2 is still at the default address of 41
 	// and is setup just like the original example
 	sensor2.setTimeout(500);
-	
+
 	if (!sensor2.init()) {
 		Serial.println("Failed to detect and initialize sensor2!");
 		while (1);
 	}
-	
+
 	sensor2.setDistanceMode(VL53L1X::Long);
 	sensor2.setMeasurementTimingBudget(50000);
 	sensor2.startContinuous(50);
@@ -107,7 +107,7 @@ void setup()
 	//setup for 7 segment
 	byte numDigits = 1;
 	byte digitPins[] = {};
-  byte segmentPins[] = {6,7,8,5,4,2,3};
+	byte segmentPins[] = {6,7,8,5,4,2,3};
 	bool resistorsOnSegments = true;
 
 	byte hardwareConfig = COMMON_ANODE; 
@@ -120,23 +120,19 @@ void setup()
 
 void loop()
 {
-
+	//read distances from both sensors
 	sensor1.read();
 	sensor2.read();
-	sevseg.setNumber(1);
-	sevseg.refreshDisplay();
 
-	Serial.print("range1: ");
-	Serial.print(sensor1.ranging_data.range_mm);
-	Serial.print(", range2: ");
-	Serial.print(sensor2.ranging_data.range_mm);
-	
 	if (sensor1.ranging_data.range_mm < ACTIVATION_DISTANCE) {
+		//if the sensor is NEWLY activated, detirmine if it is the first or second sensor to be tripped
 		if (!s1s) {
 			s1s = true;
+			//if it is the second sensor to be activated, reset the system and increment the counter
 			if (s2f) {
 				LEDcounter++;
 				s2f = false;
+			//if its the first, prime the second sensor to be ready
 			} else {
 				s1f = true;
 			}
@@ -145,6 +141,7 @@ void loop()
 		s1s = false;
 	}
 
+	//repeat for sensor two, will decrement the countrer instead of incrementing it
 	if (sensor2.ranging_data.range_mm < ACTIVATION_DISTANCE) {
 		if (!s2s) {
 			s2s = true;
@@ -159,6 +156,7 @@ void loop()
 		s2s = false;
 	}
 
+	//turn on the LED corresponding to the current occupancy
 	if (LEDcounter >= MAX_OCCUPANCY) {
 		digitalWrite(RED, HIGH);
 		digitalWrite(YELLOW, LOW);
@@ -173,9 +171,15 @@ void loop()
 		digitalWrite(GREEN, HIGH);
 	}
 	sevseg.setNumber(LEDcounter);
-  sevseg.refreshDisplay();
+	sevseg.refreshDisplay();
 
 	Serial.print("Current count: ");
 	Serial.println(LEDcounter);
+	Serial.print("range1: ");
+	Serial.print(sensor1.ranging_data.range_mm);
+	Serial.print(", range2: ");
+	Serial.println(sensor2.ranging_data.range_mm);
+
+
 
 }
