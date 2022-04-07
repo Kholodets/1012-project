@@ -42,13 +42,13 @@ int s1ActivationDistance;
 int s2ActivationDistance;
 
 void calibrate(){
-  //reads new distance
-  sensor1.read();
-  sensor2.read();
+	//reads new distance
+	sensor1.read();
+	sensor2.read();
 
-  //set the new activation distance as a proportion of the read distance
-  s1ActivationDistance = PROPORTION*sensor1.ranging_data.range_mm;
-  s2ActivationDistance = PROPORTION*sensor2.ranging_data.range_mm;
+	//set the new activation distance as a proportion of the read distance
+	s1ActivationDistance = PROPORTION*sensor1.ranging_data.range_mm;
+	s2ActivationDistance = PROPORTION*sensor2.ranging_data.range_mm;
 }
 
 void setup()
@@ -57,11 +57,11 @@ void setup()
 	pinMode(YELLOW, OUTPUT);
 	pinMode(GREEN, OUTPUT);
 
-  pinMode(LED10, OUTPUT);
-  pinMode(LED20, OUTPUT);
+	pinMode(LED10, OUTPUT);
+	pinMode(LED20, OUTPUT);
 
-  pinMode(buttonRED, INPUT);
-  pinMode(buttonBLUE, INPUT);
+	pinMode(buttonRED, INPUT);
+	pinMode(buttonBLUE, INPUT);
 
 	pinMode(sensor1_EN_Pin,OUTPUT);
 	pinMode(sensor2_EN_Pin,OUTPUT);
@@ -80,7 +80,7 @@ void setup()
 		Serial.println("Failed to detect and initialize sensor1!");
 		while (1);
 	}
- 
+
 	sensor1.setDistanceMode(VL53L1X::Long);
 	sensor1.setMeasurementTimingBudget(50000);
 
@@ -111,9 +111,9 @@ void setup()
 	sensor2.setMeasurementTimingBudget(50000);
 	sensor2.startContinuous(50);
 
-  //set default activation for sensor 1 and 2
-  s1ActivationDistance = DEFAULT_ACTIVATION_DISTANCE;
-  s2ActivationDistance = DEFAULT_ACTIVATION_DISTANCE;
+	//set default activation for sensor 1 and 2
+	s1ActivationDistance = DEFAULT_ACTIVATION_DISTANCE;
+	s2ActivationDistance = DEFAULT_ACTIVATION_DISTANCE;
 
 	//setup for 7 segment
 	byte numDigits = 1;
@@ -121,7 +121,7 @@ void setup()
 	byte segmentPins[] = {6,7,8,5,4,2,3};
 	bool resistorsOnSegments = true;
 	byte hardwareConfig = COMMON_ANODE; 
-  
+
 	sevseg.begin(hardwareConfig, numDigits, digitPins, segmentPins, resistorsOnSegments);
 	sevseg.setBrightness(90);
 	Serial.println("7-segment Initialized");
@@ -130,50 +130,50 @@ void setup()
 
 void loop()
 {
-  //red button decrements
-  if (digitalRead(buttonRED) == HIGH) {
-    if (buttonREDstate) {
-      if (!bothButtons) {
-        //Serial.println("Button RED released");
-        LEDcounter--;
-      }
-      buttonREDstate = false;
-    }
-  } else {
-    buttonREDstate = true;
-    //Serial.println("button 1 pressed");
-  }
+	//red button decrements
+	if (digitalRead(buttonRED) == HIGH) {
+		if (buttonREDstate) {
+			if (!bothButtons) {
+				//Serial.println("Button RED released");
+				LEDcounter--;
+			}
+			buttonREDstate = false;
+		}
+	} else {
+		buttonREDstate = true;
+		//Serial.println("button 1 pressed");
+	}
 
-  //blue button increments
-  if (digitalRead(buttonBLUE) == HIGH) {
-    if (buttonBLUEstate) {
-      if (!bothButtons) {
-        //Serial.println("Button BLUE released");
-        LEDcounter++;
-      }
-      buttonBLUEstate = false;
-    }
-  } else {
-    buttonBLUEstate = true;
-  }
+	//blue button increments
+	if (digitalRead(buttonBLUE) == HIGH) {
+		if (buttonBLUEstate) {
+			if (!bothButtons) {
+				//Serial.println("Button BLUE released");
+				LEDcounter++;
+			}
+			buttonBLUEstate = false;
+		}
+	} else {
+		buttonBLUEstate = true;
+	}
 
-  //both buttons calibrates
-  if (buttonREDstate && buttonBLUEstate) {
-    if (!bothButtons){
-      calibrate();
-      Serial.println("Sensor activation distance recalibrated");
-      Serial.print("s1: ");
-      Serial.print(s1ActivationDistance);
-      Serial.print(", s2: ");
-      Serial.println(s2ActivationDistance);
-    }
-    bothButtons = true;
-  }
+	//both buttons calibrates
+	if (buttonREDstate && buttonBLUEstate) {
+		if (!bothButtons){
+			calibrate();
+			Serial.println("Sensor activation distance recalibrated");
+			Serial.print("s1: ");
+			Serial.print(s1ActivationDistance);
+			Serial.print(", s2: ");
+			Serial.println(s2ActivationDistance);
+		}
+		bothButtons = true;
+	}
 
-  if (!buttonREDstate && !buttonBLUEstate) {
-    bothButtons = false;
-  }
-    
+	if (!buttonREDstate && !buttonBLUEstate) {
+		bothButtons = false;
+	}
+
 	//read distances from both sensors
 	sensor1.read();
 	sensor2.read();
@@ -188,7 +188,7 @@ void loop()
 			if (sensor2first) {
 				LEDcounter++;
 				sensor2first = false;
-			//if its the first, prime the second sensor to be ready
+				//if its the first, prime the second sensor to be ready
 			} else {
 				sensor1first = true;
 			}
@@ -227,37 +227,37 @@ void loop()
 		digitalWrite(GREEN, HIGH);
 	}
 
-  //display the current occupancy with LED and 7 segment displays
-  //blue LED corresponds to tens place with binary, 7 segment shows 1s place with arabic digits
-  if (LEDcounter < 10){ //also accounts for negative overflow
-    sevseg.setNumber(LEDcounter);
-    digitalWrite(LED10, LOW);
-    digitalWrite(LED20, LOW);
-  } else if (LEDcounter < 20){
-    sevseg.setNumber(LEDcounter % 10);
-    digitalWrite(LED10, HIGH);
-    digitalWrite(LED20, LOW);
-  } else if (LEDcounter < 30) {
-    sevseg.setNumber(LEDcounter % 10);
-    digitalWrite(LED10, LOW);
-    digitalWrite(LED20, HIGH);
-  } else if (LEDcounter < 40) {
-    sevseg.setNumber(LEDcounter % 10);
-    digitalWrite(LED10, HIGH);
-    digitalWrite(LED20, HIGH); 
-  } else { //overflow
-    digitalWrite(LED10, HIGH);
-    digitalWrite(LED20, HIGH);
-    sevseg.setNumber(LEDcounter);
-  }
-  sevseg.refreshDisplay();
+	//display the current occupancy with LED and 7 segment displays
+	//blue LED corresponds to tens place with binary, 7 segment shows 1s place with arabic digits
+	if (LEDcounter < 10){ //also accounts for negative overflow
+		sevseg.setNumber(LEDcounter);
+		digitalWrite(LED10, LOW);
+		digitalWrite(LED20, LOW);
+	} else if (LEDcounter < 20){
+		sevseg.setNumber(LEDcounter % 10);
+		digitalWrite(LED10, HIGH);
+		digitalWrite(LED20, LOW);
+	} else if (LEDcounter < 30) {
+		sevseg.setNumber(LEDcounter % 10);
+		digitalWrite(LED10, LOW);
+		digitalWrite(LED20, HIGH);
+	} else if (LEDcounter < 40) {
+		sevseg.setNumber(LEDcounter % 10);
+		digitalWrite(LED10, HIGH);
+		digitalWrite(LED20, HIGH); 
+	} else { //overflow
+		digitalWrite(LED10, HIGH);
+		digitalWrite(LED20, HIGH);
+		sevseg.setNumber(LEDcounter);
+	}
+	sevseg.refreshDisplay();
 
-  //Serial.println(LEDcounter);
+	//Serial.println(LEDcounter);
 	/*Serial.print("Current count: ");
-	Serial.println(LEDcounter);
-	Serial.print("range1: ");
-	Serial.print(sensor1.ranging_data.range_mm);
-	Serial.print(", range2: ");
-	Serial.println(sensor2.ranging_data.range_mm);*/
+	  Serial.println(LEDcounter);
+	  Serial.print("range1: ");
+	  Serial.print(sensor1.ranging_data.range_mm);
+	  Serial.print(", range2: ");
+	  Serial.println(sensor2.ranging_data.range_mm);*/
 
 }
