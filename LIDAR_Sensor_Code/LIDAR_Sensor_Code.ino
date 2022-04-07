@@ -1,22 +1,36 @@
-/* Based on the code Prof. Orser sent us. 
+/*  Code written by Eliza Maclean and Angie Chen
+ *  CSE 1012
+ *  Spring 2022
  *  Group Th5
+ *  ------
+ *  This program detects if someone goes in or out of the room uing 2 LIDAR sensors.
+ *  It increments/decrements a population counter to keep track of this information.  
+ *  Three colored LEDs (red, yellow, green) are used to display the danger levels
+ *  of the capacity.
+ *  This program also has buttons used to manually increment/decrement the counter, 
+ *  as well as calibrate the new activation distance.
+ *  -----
+ *  References:
+ *   - 7 segment: https://create.arduino.cc/projecthub/aboda243/get-started-with-seven-segment-c73200
+ *   - LIDAR: based on the code Prof. Orser sent us 
  */
+ 
 #include <Wire.h>
 #include <VL53L1X.h>
 #include "SevSeg.h"
 
+//this section assigns the pin numbers to each variable. 
 int sensor1_EN_Pin = A2;
 int sensor2_EN_Pin = A3;
-
 const int buttonRED = A1;
 const int buttonBLUE = A0;
-
 const int RED = 11;
 const int YELLOW = 12;
 const int GREEN = 13;
 int LED10 = 9;
 int LED20 = 10;
 
+//state information to determine button activation
 bool buttonREDstate = false;
 bool buttonBLUEstate = false;
 bool bothButtons = false;
@@ -25,26 +39,31 @@ VL53L1X sensor1;
 VL53L1X sensor2;
 SevSeg sevseg; 
 
-int LEDcounter = 0;
+int LEDcounter = 0; //population counter
 
+//state information to determine which order the sensors were activated 
 bool sensor1state = false;
 bool sensor2state = false;
 bool sensor1first = false;
 bool sensor2first = false;
 
-long acttime;
+long acttime; //keeps track of how long since a sensor was activated
 
-const long TIMEOUT = 1000;
+const long TIMEOUT = 1000; //how many seconds before states are reset
 
 //default distance at which the lidars will be triggered, in mm
 const int DEFAULT_ACTIVATION_DISTANCE = 500;
 
-const int MAX_OCCUPANCY = 35;
-const float PROPORTION = 0.5; //proportion of the read distance to be activation distance
+const int MAX_OCCUPANCY = 35; //set max occupancy for danger level LED readings
+const float PROPORTION = 0.65; //proportion of the read distance to be activation distance
 
+//activation distance for sensors, changeable.
+//default is set to DEFAULT_ACTIVATION_DISTANCE
 int s1ActivationDistance;
 int s2ActivationDistance;
 
+//Function: calibrate
+//Resets the new activation distance based on a proportion of the current reading
 void calibrate(){
 	//reads new distance
 	sensor1.read();
@@ -57,6 +76,7 @@ void calibrate(){
 
 void setup()
 {
+  //sets up the binds
 	pinMode(RED, OUTPUT);
 	pinMode(YELLOW, OUTPUT);
 	pinMode(GREEN, OUTPUT);
@@ -69,9 +89,9 @@ void setup()
 
 	pinMode(sensor1_EN_Pin,OUTPUT);
 	pinMode(sensor2_EN_Pin,OUTPUT);
+ 
 	digitalWrite(sensor1_EN_Pin,HIGH); // Enable sensor1
 	digitalWrite(sensor2_EN_Pin,LOW); // Disable sensor2
-
 
 	Serial.begin(115200);
 	Wire.begin();
@@ -138,7 +158,6 @@ void loop()
 	if (digitalRead(buttonRED) == HIGH) {
 		if (buttonREDstate) {
 			if (!bothButtons) {
-				//Serial.println("Button RED released");
 				LEDcounter--;
 			}
 			buttonREDstate = false;
@@ -152,7 +171,6 @@ void loop()
 	if (digitalRead(buttonBLUE) == HIGH) {
 		if (buttonBLUEstate) {
 			if (!bothButtons) {
-				//Serial.println("Button BLUE released");
 				LEDcounter++;
 			}
 			buttonBLUEstate = false;
@@ -228,10 +246,12 @@ void loop()
 		digitalWrite(RED, HIGH);
 		digitalWrite(YELLOW, LOW);
 		digitalWrite(GREEN, LOW);
+   
 	} else if (((float) LEDcounter) / MAX_OCCUPANCY >= 0.8) {
 		digitalWrite(RED, LOW);
 		digitalWrite(YELLOW, HIGH);
 		digitalWrite(GREEN, LOW);
+   
 	} else {
 		digitalWrite(RED, LOW);
 		digitalWrite(YELLOW, LOW);
@@ -244,31 +264,26 @@ void loop()
 		sevseg.setNumber(LEDcounter);
 		digitalWrite(LED10, LOW);
 		digitalWrite(LED20, LOW);
-	} else if (LEDcounter < 20){
+   
+	} else if (LEDcounter < 20){ //[10,20)
 		sevseg.setNumber(LEDcounter % 10);
 		digitalWrite(LED10, HIGH);
 		digitalWrite(LED20, LOW);
-	} else if (LEDcounter < 30) {
+   
+	} else if (LEDcounter < 30) {//[20,30)
 		sevseg.setNumber(LEDcounter % 10);
 		digitalWrite(LED10, LOW);
 		digitalWrite(LED20, HIGH);
-	} else if (LEDcounter < 40) {
+    
+	} else if (LEDcounter < 40) {//[30,40)
 		sevseg.setNumber(LEDcounter % 10);
 		digitalWrite(LED10, HIGH);
 		digitalWrite(LED20, HIGH); 
-	} else { //overflow
+   
+	} else { //overflow (40+)
 		digitalWrite(LED10, HIGH);
 		digitalWrite(LED20, HIGH);
 		sevseg.setNumber(LEDcounter);
 	}
 	sevseg.refreshDisplay();
-
-	//Serial.println(LEDcounter);
-	/*Serial.print("Current count: ");
-	  Serial.println(LEDcounter);
-	  Serial.print("range1: ");
-	  Serial.print(sensor1.ranging_data.range_mm);
-	  Serial.print(", range2: ");
-	  Serial.println(sensor2.ranging_data.range_mm);*/
-
 }
