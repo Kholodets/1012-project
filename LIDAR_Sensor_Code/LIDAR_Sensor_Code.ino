@@ -32,6 +32,10 @@ bool sensor2state = false;
 bool sensor1first = false;
 bool sensor2first = false;
 
+long acttime;
+
+const long TIMEOUT = 1000;
+
 //default distance at which the lidars will be triggered, in mm
 const int DEFAULT_ACTIVATION_DISTANCE = 500;
 
@@ -191,6 +195,7 @@ void loop()
 				//if its the first, prime the second sensor to be ready
 			} else {
 				sensor1first = true;
+				acttime = millis();
 			}
 		}
 	} else {
@@ -206,10 +211,16 @@ void loop()
 				sensor1first = false;
 			} else {
 				sensor2first = true;
+				acttime = millis();
 			}
 		}
 	} else {
 		sensor2state = false;
+	}
+
+	if (millis() - acttime > TIMEOUT) {
+		sensor2first = false;
+		sensor1first = false;
 	}
 
 	//turn on the LED corresponding to the current occupancy
